@@ -46,7 +46,7 @@ void show_all(cdot_time_t *time) {
   pause();
   a4_int((time->hour * 100) + time->minute);
   pause();
-  a4_int(time->second);
+  a4_int((time->day * 100) + time->second);
   pause();
 }
 

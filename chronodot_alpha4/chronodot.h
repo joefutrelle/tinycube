@@ -17,5 +17,6 @@ typedef struct __attribute__((packed)) {
 uint8_t cdot_init();
 uint8_t cdot_raw_read(size_t addr, uint8_t *buf, int n);
 uint8_t cdot_read(cdot_time_t *time);
+void cdot_set(cdot_time_t *time);
 void cdot_pack(cdot_time_t *time, uint8_t *buf);
 void cdot_unpack(uint8_t *buf, cdot_time_t *time);
