@@ -75,3 +75,37 @@ uint8_t cdot_read(cdot_time_t *time) {
   return TRUE;
 }
 
+/* compact version with time only, and no weekday
+year - 7 bits (skip thousands and hundreds place)
+month - 4 bits
+date - 5 bits
+--
+ymd - 16 bits
+
+hour - 6 bits
+minute - 6 bits
+second - 6 bits
+--
+hms - 18 bits
+--
+total: 36 bits
+*/
+
+void cdot_pack(cdot_time_t *time, uint8_t *buf) {
+  // buf: yyyy yyym / mmmd dddd / 0000 00HH / HHHH MMMM / MMSS SSSS
+  uint16_t y = time->year - 2000;
+  buf[0] = (y << 1) | ((time->month >> 3) & 0x01);
+  buf[1] = (time->month << 5) | (time->date & 0x1F);
+  buf[2] = (time->hour >> 6) & 0x03;
+  buf[3] = (time->hour << 4) | ((time->minute >> 2) & 0x0F);
+  buf[4] = (time->minute << 6) | (time->second & 0x3F);
+}
+
+void cdot_unpack(uint8_t *buf, cdot_time_t *time) {
+  time->year = (buf[0] >> 1) + 2000;
+  time->month = ((buf[0] & 0x01) << 3) | (buf[1] >> 5);
+  time->date = buf[1] & 0x1F;
+  time->hour = ((buf[2] & 0x03) << 4) | (buf[3] >> 4);
+  time->minute = ((buf[3] & 0x0F) << 2) | (buf[4] >> 6);
+  time->second = buf[4] & 0x3F;
+}

@@ -39,6 +39,17 @@ void a4_int(uint16_t i) {
   a4_alpha(text);
 }
 
+void show_all(cdot_time_t *time) {
+  a4_int(time->year);
+  pause();
+  a4_int((time->month * 100) + time->date);
+  pause();
+  a4_int((time->hour * 100) + time->minute);
+  pause();
+  a4_int(time->second);
+  pause();
+}
+
 int main(void)
 {
   //uint8_t cdot_buf[32];
@@ -58,9 +69,18 @@ int main(void)
       a4_text("fail");
       pause();
     } else {
-      // display the year
-      a4_int((time.hour * 100) + time.minute);
+      cdot_time_t up;
+      a4_text("time");
       pause();
+      show_all(&time);
+      // try pack/unpack
+      uint8_t buf[4];
+      cdot_pack(&time, &(buf[0]));
+      cdot_unpack(&(buf[0]), &up);
+      // display the time
+      a4_text("pack");
+      pause();
+      show_all(&up);
     }
   }
 }
