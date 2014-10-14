@@ -69,13 +69,13 @@ uint8_t cdot_read(cdot_time_t *time) {
 
   time->month = BCD2INT(raw_month);
   time->date = BCD2INT(raw_date);
-  time->day = raw_day;
+  time->day = raw_day & 0x03;
 
   // temperature
   cdot_raw_read(0x11, &(buf[0]), 2);
-  int8_t tempMsb = buf[2];
-  uint8_t tempLsb = buf[3];
-  time->temp4c = (tempMsb << 2) | (tempLsb >> 6);
+  int8_t tempMsb = buf[1];
+  uint8_t tempLsb = buf[2];
+  time->temp4c = (tempMsb * 4) + (tempLsb >> 6);
 
   return TRUE;
 }
