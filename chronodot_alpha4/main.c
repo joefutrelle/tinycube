@@ -48,6 +48,14 @@ void _show(char *text, uint16_t val) {
   pause();
 }
 
+void _show_hex(char *text, uint16_t val) {
+  a4_text(text);
+  pause();
+  a4_hex(val);
+  pause();
+  pause();
+}
+
 void show_all(cdot_time_t *time) {
   _show("year", time->year);
   _show("date", (time->month * 100) + time->date);
@@ -79,10 +87,10 @@ int main(void)
       uint16_t addr = time.minute;
       uint8_t b = time.second;
       uint8_t c = 0;
-      _show("writ", (addr * 100) + b);
+      _show_hex("writ", (addr << 8) | b);
       eep_write_byte(addr, b);
       c = eep_read_byte(addr);
-      _show("read", (addr * 100) + c);
+      _show_hex("read", (addr << 8) | c);
     }
   }
 }
