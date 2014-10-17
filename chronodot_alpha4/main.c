@@ -18,6 +18,7 @@
 #include "USI_TWI_Master.h"
 #include "alpha4.h"
 #include "chronodot.h"
+#include "eeprom.h"
 
 void pause() {
   _delay_ms(200);
@@ -56,17 +57,17 @@ void show_all(cdot_time_t *time) {
 
 int main(void)
 {
-  //uint8_t cdot_buf[32];
-
-  USI_TWI_Master_Initialise();
-
   cdot_time_t time;
 
-  a4_begin();
-  if(!cdot_init()) {
+  // initialize peripherals
+  USI_TWI_Master_Initialise();
+
+  a4_begin(); // initialize display
+  if(!cdot_init()) { // initialize RTC
     a4_text("dead");
     return 0;
   }
+  eep_init(); // initialize EEPROM
 
   for(;;) {
     if(!cdot_read(&time)) {
@@ -74,6 +75,14 @@ int main(void)
       pause();
     } else {
       show_all(&time);
+      // now do eeprom stuff
+      uint16_t addr = time.minute;
+      uint8_t b = time.second;
+      uint8_t c = 0;
+      _show("writ", (addr * 100) + b);
+      eep_write_byte(addr, b);
+      c = eep_read_byte(addr);
+      _show("read", (addr * 100) + c);
     }
   }
 }
