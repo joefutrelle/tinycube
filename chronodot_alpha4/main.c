@@ -20,7 +20,7 @@
 #include "chronodot.h"
 #include "eeprom.h"
 
-#define TEST_EEPROM 0
+#define TEST_EEPROM 1
 
 void pause() {
   _delay_ms(200);
@@ -84,27 +84,22 @@ int main(void)
       a4_text("cbad");
       pause();
     } else {
-      if(!TEST_EEPROM) {
-	show_all(&time);
-      } else {
+      show_all(&time);
+      if(TEST_EEPROM) {
 	uint16_t addr = time.minute;
 	uint8_t b = time.second;
 	uint8_t c = 0;
-	_show_hex("writ", (addr << 8) | b);
+	_show_hex("epwr", (addr << 8) | b);
 	if(!eep_write_byte(addr, b)) {
-	  _show_hex("ewfl",eep_err());
+	  _show_hex("epfl",eep_err());
 	} else {
 	  c = eep_read_byte(addr);
-	  for(;;) {
-	    a4_hex((addr << 8) | b);
-	    pause();
-	    pause();
-	    a4_hex((eep_err() << 8) | c);
-	    pause();
-	    pause();
+	  if(c != b) {
+	    _show_hex("epfl",(b << 8) | c);
+	  } else {
+	    _show_hex("eprd",(addr << 8) | c);
 	  }
 	}
-	return 0;
       }
     }
   }
