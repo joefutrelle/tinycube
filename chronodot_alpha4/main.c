@@ -20,6 +20,8 @@
 #include "chronodot.h"
 #include "eeprom.h"
 
+#define TEST_EEPROM 1
+
 void pause() {
   _delay_ms(200);
   _delay_ms(200);
@@ -72,25 +74,38 @@ int main(void)
 
   a4_begin(); // initialize display
   if(!cdot_init()) { // initialize RTC
-    a4_text("dead");
+    a4_text("cbad");
     return 0;
   }
   eep_init(); // initialize EEPROM
 
   for(;;) {
     if(!cdot_read(&time)) {
-      a4_text("fail");
+      a4_text("cbad");
       pause();
     } else {
-      show_all(&time);
-      // now do eeprom stuff
-      uint16_t addr = time.minute;
-      uint8_t b = time.second;
-      uint8_t c = 0;
-      _show_hex("writ", (addr << 8) | b);
-      eep_write_byte(addr, b);
-      c = eep_read_byte(addr);
-      _show_hex("read", (addr << 8) | c);
+      if(!TEST_EEPROM) {
+	show_all(&time);
+      } else {
+	uint16_t addr = time.minute;
+	uint8_t b = time.second;
+	uint8_t c = 0;
+	_show_hex("writ", (addr << 8) | b);
+	if(!eep_write_byte(addr, b)) {
+	  _show_hex("ewfl",eep_err());
+	} else {
+	  c = eep_read_byte(addr);
+	  for(;;) {
+	    a4_hex((addr << 8) | b);
+	    pause();
+	    pause();
+	    a4_hex((eep_err() << 8) | c);
+	    pause();
+	    pause();
+	  }
+	}
+	return 0;
+      }
     }
   }
 }
