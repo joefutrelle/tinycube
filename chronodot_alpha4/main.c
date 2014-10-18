@@ -20,7 +20,7 @@
 #include "chronodot.h"
 #include "eeprom.h"
 
-#define TEST_EEPROM 1
+#define TEST_EEPROM 0
 
 void pause() {
   _delay_ms(200);
