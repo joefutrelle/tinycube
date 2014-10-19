@@ -100,7 +100,7 @@ unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char addrByte, unsig
     USI_TWI_state.errorState = USI_TWI_DATA_OUT_OF_BOUND;
     return (FALSE);
   }
-  if(msgSize <= 1)                                 // Test if the transmission buffer is empty
+  if(msgSize < 1)                                 // Test if the transmission buffer is empty
   {
     USI_TWI_state.errorState = USI_TWI_NO_DATA;
     return (FALSE);
