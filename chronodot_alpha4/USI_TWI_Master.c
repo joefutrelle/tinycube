@@ -73,7 +73,7 @@ unsigned char USI_TWI_Get_State_Info( void )
 }
 
 /*---------------------------------------------------------------
- USI Transmit and receive function. LSB of first byte in data 
+ USI Transmit and receive function. LSB of control byte
  indicates if a read or write cycles is performed. If set a read
  operation is performed.
 
@@ -83,7 +83,8 @@ unsigned char USI_TWI_Get_State_Info( void )
  Success or error code is returned. Error codes are defined in 
  USI_TWI_Master.h
 ---------------------------------------------------------------*/
-unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char *msg, unsigned char msgSize)
+// 201410 JMF modified to take address byte as separate parameter
+unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char addrByte, unsigned char *msg, unsigned char msgSize)
 {
   unsigned char tempUSISR_8bit = (1<<USISIF)|(1<<USIOIF)|(1<<USIPF)|(1<<USIDC)|      // Prepare register value to: Clear flags, and
                                  (0x0<<USICNT0);                                     // set USI to shift 8 bits i.e. count 16 clock edges.
@@ -99,7 +100,7 @@ unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char *msg, unsigned 
     USI_TWI_state.errorState = USI_TWI_DATA_OUT_OF_BOUND;
     return (FALSE);
   }
-  if(msgSize <= 1)                                 // Test if the transmission buffer is empty
+  if(msgSize < 1)                                 // Test if the transmission buffer is empty
   {
     USI_TWI_state.errorState = USI_TWI_NO_DATA;
     return (FALSE);
@@ -124,7 +125,7 @@ unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char *msg, unsigned 
   }
 #endif
 
-  if ( !(*msg & (1<<TWI_READ_BIT)) )                // The LSB in the address byte determines if is a masterRead or masterWrite operation.
+  if ( !(addrByte & (1<<TWI_READ_BIT)) )                // The LSB in the address byte determines if is a masterRead or masterWrite operation.
   {
     USI_TWI_state.masterWriteDataMode = TRUE;
   }
@@ -160,7 +161,12 @@ unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char *msg, unsigned 
     {
       /* Write a byte */
       PORT_USI &= ~(1<<PIN_USI_SCL);                // Pull SCL LOW.
-      USIDR     = *(msg++);                        // Setup data.
+      if(USI_TWI_state.addressMode) {
+	USIDR     = addrByte; // Prepare to write address byte
+      } else {
+	USIDR     = *(msg++);                        // Setup data.
+	msgSize--;
+      }
       USI_TWI_Master_Transfer( tempUSISR_8bit );    // Send 8 bits on bus.
       
       /* Clock and verify (N)ACK from slave */
@@ -192,8 +198,10 @@ unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char *msg, unsigned 
         USIDR = 0x00;                              // Load ACK. Set data register bit 7 (output for SDA) low.
       }
       USI_TWI_Master_Transfer( tempUSISR_1bit );   // Generate ACK/NACK.
+
+      msgSize--;
     }
-  }while( --msgSize) ;                             // Until all data sent/received.
+  }while(msgSize) ;                             // Until all data sent/received.
   
   USI_TWI_Master_Stop();                           // Send a STOP condition on the TWI bus.
 

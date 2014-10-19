@@ -74,31 +74,31 @@ int main(void)
 
   a4_begin(); // initialize display
   if(!cdot_init()) { // initialize RTC
-    a4_text("cbad");
+    a4_text("cifl");
     return 0;
   }
   eep_init(); // initialize EEPROM
 
   for(;;) {
     if(!cdot_read(&time)) {
-      a4_text("cbad");
+      a4_text("crfl");
       pause();
     } else {
       show_all(&time);
-      if(TEST_EEPROM) {
-	uint16_t addr = time.minute;
-	uint8_t b = time.second;
-	uint8_t c = 0;
-	_show_hex("epwr", (addr << 8) | b);
-	if(!eep_write_byte(addr, b)) {
-	  _show_hex("epfl",eep_err());
+    }
+    if(TEST_EEPROM) {
+      uint16_t addr = time.minute;
+      uint8_t b = time.second;
+      uint8_t c = 0;
+      _show_hex("epwr", (addr << 8) | b);
+      if(!eep_write_byte(addr, b)) {
+	_show_hex("epfl",eep_err());
+      } else {
+	c = eep_read_byte(addr);
+	if(c != b) {
+	  _show_hex("epfl",(b << 8) | c);
 	} else {
-	  c = eep_read_byte(addr);
-	  if(c != b) {
-	    _show_hex("epfl",(b << 8) | c);
-	  } else {
-	    _show_hex("eprd",(addr << 8) | c);
-	  }
+	  _show_hex("eprd",(addr << 8) | c);
 	}
       }
     }

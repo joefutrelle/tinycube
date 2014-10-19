@@ -63,10 +63,9 @@ uint16_t a4_font[] = {
 // send a command to the alpha display
 void a4_cmd(uint8_t cmd) {
   uint8_t buf[] = {
-    i2c_write_mode(HT16K33_ADDR),
     cmd
   };
-  TX(buf,2);
+  TX(HT16K33_ADDR,buf,1);
 }
 
 #define LSB(b) b & 0xFF
@@ -77,14 +76,13 @@ void a4_cmd(uint8_t cmd) {
 // using four 16-bit flags (lit high)
 void a4_display(uint16_t *raw) {
   uint8_t buf[] = {
-    i2c_write_mode(HT16K33_ADDR),
     0x00,
     INT16(raw[0]),
     INT16(raw[1]),
     INT16(raw[2]),
     INT16(raw[3])
   };
-  TX(buf,10);
+  TX(HT16K33_ADDR,buf,9);
 }
 
 // make the display blank
