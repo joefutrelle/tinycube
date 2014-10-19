@@ -30,8 +30,8 @@ uint8_t eep_read_byte(uint16_t addr) {
     MSB(addr),
     LSB(addr)
   };
-  if(!TX(EEP_ADDR,msg,2) &&
-     RX(EEP_ADDR,msg,1)) {
+  if(!(TX(EEP_ADDR,msg,2) &&
+       RX(EEP_ADDR,msg,1))) {
     return 0;
   }
   return msg[0];

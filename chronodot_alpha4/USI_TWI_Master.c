@@ -162,7 +162,7 @@ unsigned char USI_TWI_Start_Transceiver_With_Data( unsigned char addrByte, unsig
       /* Write a byte */
       PORT_USI &= ~(1<<PIN_USI_SCL);                // Pull SCL LOW.
       if(USI_TWI_state.addressMode) {
-	USIDR = addrByte; // Prepare to write address byte
+	USIDR     = addrByte; // Prepare to write address byte
       } else {
 	USIDR     = *(msg++);                        // Setup data.
 	msgSize--;
