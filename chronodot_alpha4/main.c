@@ -88,16 +88,18 @@ int main(void)
     }
     if(TEST_EEPROM) {
       uint16_t addr = time.minute;
-      uint8_t b = time.second + 1;
+      uint8_t b = time.second;
       uint8_t c = 0;
-      _show_hex("writ", (addr << 8) | b);
+      _show_hex("epwr", (addr << 8) | b);
       if(!eep_write_byte(addr, b)) {
-	_show_hex("ewfl",eep_err());
-      }
-      if(!(c = eep_read_byte(addr))) {
-	_show_hex("erfl",eep_err());
+	_show_hex("epfl",eep_err());
       } else {
-	_show_hex("read", (addr << 8) | c);
+	c = eep_read_byte(addr);
+	if(c != b) {
+	  _show_hex("epfl",(b << 8) | c);
+	} else {
+	  _show_hex("eprd",(addr << 8) | c);
+	}
       }
     }
   }
