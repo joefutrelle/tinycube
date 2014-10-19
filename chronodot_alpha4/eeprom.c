@@ -16,28 +16,23 @@ uint8_t eep_err() {
 
 uint8_t eep_write_byte(uint16_t addr, uint8_t b) {
   uint8_t buf[] = {
-    i2c_write_mode(EEP_ADDR),
     MSB(addr),
     LSB(addr),
     b
   };
-  uint8_t ret = TX(buf,4);
+  uint8_t ret = TX(EEP_ADDR,buf,3);
   _delay_ms(5);
   return ret;
 }
 
 uint8_t eep_read_byte(uint16_t addr) {
   uint8_t msg[] = {
-    i2c_write_mode(EEP_ADDR),
     MSB(addr),
     LSB(addr)
   };
-  if(!TX(msg,3)) {
-    return 0x00;
+  if(!TX(EEP_ADDR,msg,2) &&
+     RX(EEP_ADDR,msg,1)) {
+    return 0;
   }
-  msg[0] = i2c_read_mode(EEP_ADDR);
-  if(!TX(msg,2)) {
-    return 0x00;
-  }
-  return msg[1];
+  return msg[0];
 }

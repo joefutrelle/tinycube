@@ -9,20 +9,18 @@
 // used for setting the clock
 uint8_t set_reg(uint8_t addr, uint8_t value) {
   uint8_t buf[] = {
-    i2c_write_mode(DS3231_ADDR),
     addr,
     value
   };
-  return TX(buf,3);
+  return TX(DS3231_ADDR,buf,2);
 }
 
 // used to transmit register before receiving
 uint8_t send_reg_addr(uint8_t addr) {
   uint8_t buf[] = {
-    i2c_write_mode(DS3231_ADDR),
     addr
   };
-  return TX(buf,2);
+  return TX(addr,buf,1);
 }
 
 // set up clock
@@ -38,12 +36,7 @@ uint8_t cdot_init() {
 uint8_t cdot_raw_read(size_t addr, uint8_t *buf, int n) {
   if(!send_reg_addr(addr))
     return FALSE;
-  int i = 0;
-  buf[i++] = i2c_read_mode(DS3231_ADDR);
-  while(i < n) {
-    buf[i++] = 0xFF;
-  }
-  return TX(buf,n+1);
+  return RX(DS3231_ADDR,buf,n);
 }
 
 // read the clock, populating the provided time
