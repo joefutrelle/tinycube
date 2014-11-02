@@ -20,6 +20,7 @@
 #include "alpha4.h"
 #include "chronodot.h"
 #include "eeprom.h"
+#include "wdt_sleep.h"
 
 /* I2C bus is powered from PB1
  * to enable powering peripherals up and down
@@ -27,7 +28,9 @@
  */
 #define I2C_POWER_PIN PB1
 
-#define TEST_EEPROM 1
+#define DEBUG
+
+#ifdef DEBUG
 
 void pause() {
   _delay_ms(200);
@@ -72,46 +75,58 @@ void show_all(cdot_time_t *time) {
   _show("temp", ((time->temp4c / 4) * 100) + ((time->temp4c & 0x3) * 25));
 }
 
-int main(void)
-{
+#endif
+
+void log_data() {
+  cdot_init(); // initialize RTC
+  //  eep_init(); // initialize EEPROM
+#ifdef DEBUG
+  a4_init(); // initialize display
+#endif
+
   cdot_time_t time;
 
-  // power up peripherals
-  power_init(I2C_POWER_PIN);
-  power_up(I2C_POWER_PIN);
+  int ret = cdot_read(&time);
 
-  // initialize peripherals
-  USI_TWI_Master_Initialise();
-
-  a4_begin(); // initialize display
-  if(!cdot_init()) { // initialize RTC
-    a4_text("cifl");
-    return 0;
-  }
-  eep_init(); // initialize EEPROM
-
-  for(;;) {
-    if(!cdot_read(&time)) {
+#ifdef DEBUG
+  if(!ret) {
       a4_text("crfl");
       pause();
-    } else {
-      show_all(&time);
-    }
-    if(TEST_EEPROM) {
-      uint16_t addr = time.minute;
-      uint8_t b = time.second;
-      uint8_t c = 0;
-      _show_hex("epwr", (addr << 8) | b);
-      if(!eep_write_byte(addr, b)) {
-	_show_hex("epfl",eep_err());
-      } else {
-	c = eep_read_byte(addr);
-	if(c != b) {
-	  _show_hex("epfl",(b << 8) | c);
-	} else {
-	  _show_hex("eprd",(addr << 8) | c);
-	}
-      }
-    }
+  } else {
+    show_all(&time);
+  }
+#endif
+}
+
+int main(void)
+{
+  // avoid reset race conditions
+  prevent_wdt_reset();
+  // setup (or re-setup) WDT
+  setup_wdt();
+
+  // initialize I2C library
+  USI_TWI_Master_Initialise();
+  // initialize I2C power
+  power_init(I2C_POWER_PIN);
+
+  // go into sleep/wake cycle
+  for(;;) {
+    while(get_sleep_count() < 3) {
+      // go to sleep
+      go_to_sleep();
+
+      // MCU is now sleeping
+    } // loop exits after enough wake/sleep ticks
+
+    // power up peripherals
+    power_up(I2C_POWER_PIN);
+
+    // do what we're here to do
+    log_data();
+
+    // and prepare to go back to sleep
+    power_down(I2C_POWER_PIN);
+    reset_sleep_count();
   }
 }

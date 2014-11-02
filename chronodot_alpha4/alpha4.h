@@ -41,7 +41,7 @@ void a4_clear();
 // - set brightness to max
 // - disable any blinking
 // - clear the display
-void a4_begin();
+void a4_init();
 // display a value in hexidecimal
 void a4_hex(uint16_t val);
 // display alphanumeric text. upcases all letters.

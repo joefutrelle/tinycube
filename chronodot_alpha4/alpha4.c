@@ -95,7 +95,7 @@ void a4_clear() {
 // - set brightness to max
 // - disable any blinking
 // - clear the display
-void a4_begin() {
+void a4_init() {
   a4_cmd(HT16K33_CMD_OSC_ON);
   a4_cmd(HT16K33_CMD_BRIGHTNESS | 15); // set brightness to 15
   a4_cmd(HT16K33_CMD_BLINK | HT16K33_BLINK_DISPLAYON); // no blink
