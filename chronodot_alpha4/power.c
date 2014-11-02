@@ -1,5 +1,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include "power.h"
 
 #define POWER_DD DDRB
 #define POWER_PORT PORTB
