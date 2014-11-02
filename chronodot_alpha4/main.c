@@ -16,9 +16,16 @@
 #include <stdlib.h>
 #include <util/delay.h>
 #include "USI_TWI_Master.h"
+#include "power.h"
 #include "alpha4.h"
 #include "chronodot.h"
 #include "eeprom.h"
+
+/* I2C bus is powered from PB1
+ * to enable powering peripherals up and down
+ * during sleep
+ */
+#define I2C_POWER_PIN PB1
 
 #define TEST_EEPROM 1
 
@@ -68,6 +75,10 @@ void show_all(cdot_time_t *time) {
 int main(void)
 {
   cdot_time_t time;
+
+  // power up peripherals
+  power_init(I2C_POWER_PIN);
+  power_up(I2C_POWER_PIN);
 
   // initialize peripherals
   USI_TWI_Master_Initialise();

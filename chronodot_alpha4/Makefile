@@ -20,7 +20,7 @@
 DEVICE     = attiny85
 CLOCK      = 8000000
 PROGRAMMER = -c usbtiny
-OBJECTS    = main.o USI_TWI_Master.o alpha4.o chronodot.o eeprom.o
+OBJECTS    = main.o USI_TWI_Master.o alpha4.o chronodot.o eeprom.o power.o
 FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m
 
 # ATMega8 fuse bits used above (fuse bits for other devices are different!):

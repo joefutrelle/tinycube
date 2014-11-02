@@ -1,6 +1,10 @@
 #pragma once
 #include <avr/io.h>
 
+/* Microchip 24LC256 256kbit i2c EEPROM
+ * Datasheet
+ * http://ww1.microchip.com/downloads/en/DeviceDoc/21203M.pdf
+ */
 void eep_init();
 uint8_t eep_err();
 uint8_t eep_write_byte(uint16_t addr, uint8_t b);
