@@ -104,7 +104,6 @@ int main(void)
   prevent_wdt_reset();
   // setup (or re-setup) WDT
   setup_wdt();
-
   // initialize I2C library
   USI_TWI_Master_Initialise();
   // initialize I2C power
@@ -112,21 +111,15 @@ int main(void)
 
   // go into sleep/wake cycle
   for(;;) {
-    while(get_sleep_count() < 3) {
-      // go to sleep
-      go_to_sleep();
+    // waking
 
-      // MCU is now sleeping
-    } // loop exits after enough wake/sleep ticks
+    // with power on, log data
+    with_power(I2C_POWER_PIN, &log_data);
 
-    // power up peripherals
-    power_up(I2C_POWER_PIN);
-
-    // do what we're here to do
-    log_data();
-
-    // and prepare to go back to sleep
-    power_down(I2C_POWER_PIN);
+    // sleeping
     reset_sleep_count();
+    while(get_sleep_count() < 3) {
+      go_to_sleep();
+    }
   }
 }
