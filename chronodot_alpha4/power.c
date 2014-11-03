@@ -17,8 +17,8 @@ void power_up(int pin) {
 }
 
 void power_down(int pin) {
-  PORTB &= ~_BV(pin);
-  _delay_ms(5);
+  POWER_PORT &= ~_BV(pin);
+  _delay_ms(POWER_DELAY);
 }
 
 void with_power(int pin, void (*fn)()) {

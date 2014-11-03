@@ -1,10 +1,17 @@
 #include <string.h>
+#include <util/delay.h>
 #include "chronodot.h"
 #include "i2c.h"
 
 // interpret binary-coded-decimal for two-digit numbers
 #define BCD2INT(b) ((((b) & 0xF0) >> 4) * 10 + ((b) & 0x0F))
 #define INT2BCD(i) ((((i) / 10) << 4) | ((i) % 10))
+
+#define CTL_REG 0x0E
+#define STATUS_REG 0x0F
+#define CONV 5
+#define BSY 2
+#define CTL_DEFAULT 0b00011100
 
 // used for setting the clock
 uint8_t set_reg(uint8_t addr, uint8_t value) {
@@ -30,13 +37,22 @@ uint8_t cdot_init() {
   // keeps running on just battery power. Once set,
   // it shouldn't need to be reset but it's a good
   // idea to make sure.
-  return set_reg(0x0E,0b00011100);
+  //uint8_t ctl_reg = 0b00011100;
+  return set_reg(CTL_REG, CTL_DEFAULT);
 }
 
 uint8_t cdot_raw_read(size_t addr, uint8_t *buf, int n) {
   if(!send_reg_addr(addr))
     return FALSE;
   return RX(DS3231_ADDR,buf,n);
+}
+
+uint8_t get_reg(size_t addr) {
+  uint8_t buf[1];
+  if(cdot_raw_read(addr, &(buf[0]), 1)) {
+    return buf[0];
+  }
+  return FALSE;
 }
 
 // read the clock, populating the provided time
@@ -73,6 +89,18 @@ uint8_t cdot_read(cdot_time_t *time) {
   return TRUE;
 }
 
+uint8_t cdot_read_temp(cdot_time_t *time) {
+  // wait until not BSY
+  while(get_reg(STATUS_REG) & _BV(BSY))
+    ;
+  // initiate conversion
+  set_reg(CTL_REG, CTL_DEFAULT | _BV(CONV)); // CONV
+  // wait until CONV goes to zero
+  while(get_reg(CTL_REG) & _BV(CONV))
+    ;
+  return cdot_read(time);
+}
+
 // set the clock. erases any existing setting. ignores temperature
 // as that is a read-only register.
 void cdot_set(cdot_time_t *time) {
@@ -84,7 +112,6 @@ void cdot_set(cdot_time_t *time) {
   set_reg(i++, INT2BCD(time->date));
   set_reg(i++, INT2BCD(time->month));
   set_reg(i++, INT2BCD(time->year));
-  // FIXME this is untested
 }
 
 // slightly more compact 5-byte representation

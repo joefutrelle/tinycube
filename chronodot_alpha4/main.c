@@ -80,13 +80,18 @@ void show_all(cdot_time_t *time) {
 void log_data() {
   cdot_init(); // initialize RTC
   //  eep_init(); // initialize EEPROM
+
 #ifdef DEBUG
   a4_init(); // initialize display
+  a4_text("wake");
+  pause();
 #endif
+
+  a4_text("wait");
 
   cdot_time_t time;
 
-  int ret = cdot_read(&time);
+  int ret = cdot_read_temp(&time);
 
 #ifdef DEBUG
   if(!ret) {
@@ -95,6 +100,10 @@ void log_data() {
   } else {
     show_all(&time);
   }
+
+  a4_text("doze");
+  pause();
+  a4_clear();
 #endif
 }
 
@@ -118,7 +127,7 @@ int main(void)
 
     // sleeping
     reset_sleep_count();
-    while(get_sleep_count() < 3) {
+    while(get_sleep_count() < 2) {
       go_to_sleep();
     }
   }
