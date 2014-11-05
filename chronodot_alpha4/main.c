@@ -14,6 +14,7 @@
  */
 #include <avr/io.h>
 #include <stdlib.h>
+#include <string.h>
 #include <util/delay.h>
 #include "USI_TWI_Master.h"
 #include "power.h"
@@ -77,6 +78,17 @@ void show_all(cdot_time_t *time) {
 
 #endif
 
+uint16_t log_addr = 0;
+
+#ifdef DEBUG
+int clock_set = 0;
+
+void set_clock(cdot_time_t *time) {
+  time->year = 2014; // etc
+  cdot_set(time);
+}
+#endif
+
 void log_data() {
   cdot_init(); // initialize RTC
   //  eep_init(); // initialize EEPROM
@@ -90,8 +102,19 @@ void log_data() {
   a4_text("wait");
 
   cdot_time_t time;
+  uint8_t packed[16];
+  memset(&(packed[0]),0x00,16); // necessary?
 
   int ret = cdot_read_temp(&time);
+
+#ifdef DEBUG
+  if(!clock_set) {
+    clock_set = 1;
+    a4_text("cset");
+    pause();
+    set_clock(&time);
+  }
+#endif
 
 #ifdef DEBUG
   if(!ret) {
@@ -99,6 +122,29 @@ void log_data() {
       pause();
   } else {
     show_all(&time);
+  }
+  a4_text("writ");
+  pause();
+#endif
+
+  cdot_pack(&time, packed);
+  // now pack temp
+  packed[5] = time.temp4c >> 8;
+  packed[6] = time.temp4c & 0xFF;
+  int i = 0;
+  for(i = 0; i < 16; i++) {
+    ret = eep_write_byte(log_addr+i, packed[i]);
+  }// FIXME write block
+  /*ret = eep_write_block(log_addr, packed, 16);*/
+
+  if(ret) {
+    log_addr += 8;
+  }
+
+#ifdef DEBUG
+  if(!ret) {
+    a4_text("epfl");
+    pause();
   }
 
   a4_text("doze");
@@ -127,7 +173,7 @@ int main(void)
 
     // sleeping
     reset_sleep_count();
-    while(get_sleep_count() < 2) {
+    while(get_sleep_count() < 2) { // minimal sleep
       go_to_sleep();
     }
   }

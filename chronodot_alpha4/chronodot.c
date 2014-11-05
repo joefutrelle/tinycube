@@ -111,7 +111,7 @@ void cdot_set(cdot_time_t *time) {
   set_reg(i++, time->day);
   set_reg(i++, INT2BCD(time->date));
   set_reg(i++, INT2BCD(time->month));
-  set_reg(i++, INT2BCD(time->year));
+  set_reg(i++, INT2BCD(time->year - 2000));
 }
 
 // slightly more compact 5-byte representation

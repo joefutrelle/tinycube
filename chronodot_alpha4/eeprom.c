@@ -1,3 +1,4 @@
+#include <string.h>
 #include <util/delay.h>
 #include "eeprom.h"
 #include "i2c.h"
@@ -6,6 +7,8 @@
 
 #define LSB(b) b & 0xFF
 #define MSB(b) b >> 8
+
+#define MAX_EEP_BLOCK 16
 
 void eep_init() {
 }
@@ -35,4 +38,17 @@ uint8_t eep_read_byte(uint16_t addr) {
     return 0;
   }
   return msg[0];
+}
+
+uint8_t eep_write_block(uint16_t addr, void *b, size_t len) {
+  uint8_t msg[MAX_EEP_BLOCK+2];
+  len = len > MAX_EEP_BLOCK ? MAX_EEP_BLOCK : len;
+  msg[0] = MSB(addr);
+  msg[1] = LSB(addr);
+  memcpy(&(msg[2]),b,len);
+  return TX(EEP_ADDR,msg,len+2);
+}
+
+uint8_t eep_read_block(uint16_t addr, void *b, size_t len) {
+  return 1; // FIXME implement
 }
