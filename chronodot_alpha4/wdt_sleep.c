@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
 #include <avr/sleep.h>
+#include <util/delay.h>
 #include "wdt_sleep.h"
 
 // cribbing from http://electronics.stackexchange.com/a/74850
@@ -36,9 +37,13 @@ uint8_t get_sleep_count() {
 
 void reset_sleep_count() {
   sleep_count = 0;
+  // brief pause
+  _delay_ms(5);
 }
 
 void go_to_sleep() {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  // brief pause
+  _delay_ms(5);
   sleep_mode();
 }

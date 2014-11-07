@@ -17,6 +17,7 @@
 #include <string.h>
 #include <util/delay.h>
 #include "USI_TWI_Master.h"
+#include "i2c.h"
 #include "power.h"
 #include "alpha4.h"
 #include "chronodot.h"
@@ -81,17 +82,22 @@ void show_all(cdot_time_t *time) {
 uint16_t log_addr = 0;
 
 #ifdef DEBUG
-int clock_set = 0;
+int clock_set = 1; // is the clock set already?
 
 void set_clock(cdot_time_t *time) {
   time->year = 2014; // etc
+  time->month = 11;
+  time->date = 7;
+  time->hour = 15;
+  time->minute = 5;
+  time->second = 0;
   cdot_set(time);
 }
 #endif
 
 void log_data() {
   cdot_init(); // initialize RTC
-  //  eep_init(); // initialize EEPROM
+  eep_init(); // initialize EEPROM
 
 #ifdef DEBUG
   a4_init(); // initialize display
@@ -123,23 +129,23 @@ void log_data() {
   } else {
     show_all(&time);
   }
-  a4_text("writ");
-  pause();
 #endif
 
   cdot_pack(&time, packed);
   // now pack temp
   packed[5] = time.temp4c >> 8;
   packed[6] = time.temp4c & 0xFF;
+  /*
   int i = 0;
   for(i = 0; i < 16; i++) {
     ret = eep_write_byte(log_addr+i, packed[i]);
   }// FIXME write block
-  /*ret = eep_write_block(log_addr, packed, 16);*/
-
-  if(ret) {
-    log_addr += 8;
-  }
+  */
+#ifdef DEBUG
+  _show_hex("writ",log_addr);
+#endif
+  eep_write_block(log_addr, packed, 16);
+  log_addr += 8;
 
 #ifdef DEBUG
   if(!ret) {
@@ -153,6 +159,13 @@ void log_data() {
 #endif
 }
 
+#ifdef DEBUG
+void motd() {
+  a4_text("rset");
+  pause();
+}
+#endif
+
 int main(void)
 {
   // avoid reset race conditions
@@ -164,6 +177,13 @@ int main(void)
   // initialize I2C power
   power_init(I2C_POWER_PIN);
 
+  // before doing anything, wait a bit
+  _delay_ms(100);
+
+#ifdef DEBUG
+  with_power(I2C_POWER_PIN, &motd);
+#endif
+
   // go into sleep/wake cycle
   for(;;) {
     // waking
@@ -173,7 +193,7 @@ int main(void)
 
     // sleeping
     reset_sleep_count();
-    while(get_sleep_count() < 2) { // minimal sleep
+    while(get_sleep_count() < 3) { // minimal sleep
       go_to_sleep();
     }
   }

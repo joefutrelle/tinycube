@@ -46,7 +46,9 @@ uint8_t eep_write_block(uint16_t addr, void *b, size_t len) {
   msg[0] = MSB(addr);
   msg[1] = LSB(addr);
   memcpy(&(msg[2]),b,len);
-  return TX(EEP_ADDR,msg,len+2);
+  uint8_t ret = TX(EEP_ADDR,msg,len+2);
+  _delay_ms(5);
+  return ret;
 }
 
 uint8_t eep_read_block(uint16_t addr, void *b, size_t len) {
